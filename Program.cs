@@ -1,6 +1,13 @@
+using Microsoft.EntityFrameworkCore; // Tambahkan ini
 using Microsoft.OpenApi.Models;
+using PinjamRuang.Data; // Pastikan namespace AppDbContext kamu benar
 
 var builder = WebApplication.CreateBuilder(args);
+
+// 1. DAFTARKAN CONNECTION STRING (PENTING!)
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(connectionString));
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

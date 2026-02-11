@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using PinjamRuang.Models;
+using PinjamRuang.Entities;
 
 namespace PinjamRuang.Data
 {
@@ -63,6 +63,5 @@ namespace PinjamRuang.Data
             );
         }
     }
-
 }
 
