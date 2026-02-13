@@ -105,10 +105,8 @@ public class RoomController : ControllerBase
     {
         var ruangan = await _context.Rooms.FindAsync(id);
         if (ruangan == null) return NotFound();
-
         ruangan.DeletedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
-
         return NoContent();
     }
 }
