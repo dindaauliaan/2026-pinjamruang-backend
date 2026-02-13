@@ -13,6 +13,7 @@ public class BorrowingsController : ControllerBase
     {
         _context = context;
     }
+    //create borrowing
     [HttpPost]
     public async Task<IActionResult> Create(CreateBorrowingDto dto)
     {
@@ -34,6 +35,7 @@ public class BorrowingsController : ControllerBase
 
         return CreatedAtAction(nameof(GetById), new { id = borrowing.Id }, borrowing);
     }
+    //get all borrowings
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
@@ -44,6 +46,7 @@ public class BorrowingsController : ControllerBase
 
         return Ok(data);
     }
+    //get borrowing by id
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
@@ -56,7 +59,7 @@ public class BorrowingsController : ControllerBase
 
         return Ok(borrowing);
     }
-
+    //update borrowing
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, CreateBorrowingDto dto)
     {
@@ -73,6 +76,7 @@ public class BorrowingsController : ControllerBase
         await _context.SaveChangesAsync();
         return Ok(borrowing);
     }
+    //delete borrowing (soft delete)
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
@@ -85,6 +89,38 @@ public class BorrowingsController : ControllerBase
         await _context.SaveChangesAsync();
 
         return NoContent();
+    }
+    //get borrowing status
+    [HttpGet("{id}/status")]
+    public async Task<IActionResult> GetStatus(int id)
+    {
+        var borrowing = await _context.Borrowings
+            .FirstOrDefaultAsync(b => b.Id == id && b.DeletedAt == null);
+
+        if (borrowing == null)
+            return NotFound();
+
+        return Ok(new { status = borrowing.Status });
+    }
+    //update borrowing status
+    [HttpPut("{id}/status")]
+    public async Task<IActionResult> UpdateStatus(int id, UpdateBorrowingStatusDto dto)
+    {
+        var allowedStatus = new[] { "pending", "approved", "rejected" };
+
+        if (!allowedStatus.Contains(dto.Status))
+            return BadRequest("Status tidak valid");
+
+        var borrowing = await _context.Borrowings
+            .FirstOrDefaultAsync(b => b.Id == id && b.DeletedAt == null);
+
+        if (borrowing == null)
+            return NotFound();
+
+        borrowing.Status = dto.Status;
+        await _context.SaveChangesAsync();
+
+        return Ok(new { status = borrowing.Status });
     }
 
 }
