@@ -10,7 +10,8 @@ namespace PinjamRuang.Entities
         public required string NamaPeminjam { get; set; }
         public required string Keperluan { get; set; }
 
-        public DateOnly Tanggal { get; set; }
+        public DateTime Tanggal { get; set; }
+
 
         public string Status { get; set; } = "pending";
 

@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PinjamRuang.Data;
-using PinjamRuang.DTOs.Room;
 using PinjamRuang.Entities;
+
 [ApiController]
 [Route("borrowings")]
 public class BorrowingsController : ControllerBase
@@ -13,75 +13,78 @@ public class BorrowingsController : ControllerBase
     {
         _context = context;
     }
-    //create borrowing
+
+    // ================= CREATE =================
     [HttpPost]
     public async Task<IActionResult> Create(CreateBorrowingDto dto)
     {
-        if (string.IsNullOrEmpty(dto.NamaPeminjam) || string.IsNullOrEmpty(dto.Keperluan))
+        if (string.IsNullOrWhiteSpace(dto.NamaPeminjam) ||
+            string.IsNullOrWhiteSpace(dto.Keperluan))
+        {
             return BadRequest("Field wajib tidak boleh kosong");
+        }
 
         var borrowing = new Borrowing
         {
             RoomId = dto.RoomId,
             NamaPeminjam = dto.NamaPeminjam,
             Keperluan = dto.Keperluan,
-            Tanggal = dto.Tanggal,
-            Status = "pending",
-
+            Tanggal = DateTime.Parse(dto.Tanggal),
+            Status = "pending"
         };
 
         _context.Borrowings.Add(borrowing);
         await _context.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetById), new { id = borrowing.Id }, borrowing);
+        return Ok(borrowing);
     }
-    //get borrowings with filter
-    // Cukup satu fungsi untuk Get All DAN Filter
+
+    // ================= GET ALL + FILTER =================
     [HttpGet]
     public async Task<IActionResult> GetBorrowings(
         [FromQuery] string? status,
         [FromQuery] string? nama_peminjam
     )
     {
-        // 1. Mulai dengan query dasar (termasuk Include Room dan filter DeletedAt)
         var query = _context.Borrowings
-            .Include(b => b.Room)
             .Where(b => b.DeletedAt == null)
             .AsQueryable();
 
-        // 2. Filter berdasarkan status jika ada
         if (!string.IsNullOrEmpty(status))
         {
-            var statusLower = status.ToLower();
-            var allowedStatus = new[] { "pending", "approved", "rejected" };
-
-            if (!allowedStatus.Contains(statusLower))
-            {
+            var allowed = new[] { "pending", "approved", "rejected" };
+            if (!allowed.Contains(status.ToLower()))
                 return BadRequest("Status tidak valid");
-            }
 
-            query = query.Where(b => b.Status == statusLower);
+            query = query.Where(b => b.Status == status.ToLower());
         }
 
-        // 3. Pencarian nama peminjam jika ada
         if (!string.IsNullOrEmpty(nama_peminjam))
         {
             query = query.Where(b =>
-                b.NamaPeminjam.Contains(nama_peminjam)
-            );
+                b.NamaPeminjam.Contains(nama_peminjam));
         }
 
-        // 4. Eksekusi ke database
-        var result = await query.ToListAsync();
+        var result = await query
+            .Select(b => new
+            {
+                b.Id,
+                b.NamaPeminjam,
+                b.Keperluan,
+                b.Tanggal,
+                b.Status,
+                b.RoomId
+            })
+            .ToListAsync();
+
         return Ok(result);
     }
 
-    //get borrowing by id
+    // ================= GET BY ID =================
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
         var borrowing = await _context.Borrowings
-            .Include(b => b.Room)
             .FirstOrDefaultAsync(b => b.Id == id && b.DeletedAt == null);
 
         if (borrowing == null)
@@ -89,7 +92,8 @@ public class BorrowingsController : ControllerBase
 
         return Ok(borrowing);
     }
-    //update borrowing
+
+    // ================= UPDATE =================
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, CreateBorrowingDto dto)
     {
@@ -101,12 +105,13 @@ public class BorrowingsController : ControllerBase
         borrowing.RoomId = dto.RoomId;
         borrowing.NamaPeminjam = dto.NamaPeminjam;
         borrowing.Keperluan = dto.Keperluan;
-        borrowing.Tanggal = dto.Tanggal;
+        borrowing.Tanggal = DateTime.Parse(dto.Tanggal);
 
         await _context.SaveChangesAsync();
         return Ok(borrowing);
     }
-    //delete borrowing (soft delete)
+
+    // ================= DELETE (SOFT) =================
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
@@ -120,7 +125,8 @@ public class BorrowingsController : ControllerBase
 
         return NoContent();
     }
-    //get borrowing status
+
+    // ================= STATUS =================
     [HttpGet("{id}/status")]
     public async Task<IActionResult> GetStatus(int id)
     {
@@ -132,13 +138,12 @@ public class BorrowingsController : ControllerBase
 
         return Ok(new { status = borrowing.Status });
     }
-    //update borrowing status
+
     [HttpPut("{id}/status")]
     public async Task<IActionResult> UpdateStatus(int id, UpdateBorrowingStatusDto dto)
     {
-        var allowedStatus = new[] { "pending", "approved", "rejected" };
-
-        if (!allowedStatus.Contains(dto.Status))
+        var allowed = new[] { "pending", "approved", "rejected" };
+        if (!allowed.Contains(dto.Status))
             return BadRequest("Status tidak valid");
 
         var borrowing = await _context.Borrowings
@@ -152,5 +157,4 @@ public class BorrowingsController : ControllerBase
 
         return Ok(new { status = borrowing.Status });
     }
-    
 }
