@@ -48,6 +48,7 @@ public class BorrowingsController : ControllerBase
     {
         var query = _context.Borrowings
             .Where(b => b.DeletedAt == null)
+            .Include(b => b.Room)
             .AsQueryable();
 
         if (!string.IsNullOrEmpty(status))
