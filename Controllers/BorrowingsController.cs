@@ -74,7 +74,7 @@ public class BorrowingsController : ControllerBase
                 b.Keperluan,
                 b.Tanggal,
                 b.Status,
-                b.RoomId
+                roomName = b.Room.Name
             })
             .ToListAsync();
 

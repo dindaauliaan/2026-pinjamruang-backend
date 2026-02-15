@@ -5,7 +5,7 @@ namespace PinjamRuang.Entities
         public int Id { get; set; }
 
         public int RoomId { get; set; }
-        public Room? Room { get; set; }
+        public Room Room { get; set; } 
 
         public required string NamaPeminjam { get; set; }
         public required string Keperluan { get; set; }

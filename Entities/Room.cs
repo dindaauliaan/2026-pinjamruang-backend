@@ -23,5 +23,6 @@ namespace PinjamRuang.Entities
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? DeletedAt { get; set; }
+        public ICollection<Borrowing> Borrowings { get; set; }
     }
 }
